@@ -23,41 +23,33 @@ jobs:
         run: |
           # Define a list of non-critical commands
           NON_CRITICAL_COMMANDS=("ls -la" "uptime" "df -h" "free -m" "echo 'Hello from segNetherfault'" "date" "free -h" "ps aux" "netstat -tuln" "lsb_release -a" "uname -a" "whoami" "pwd" "w" "cat /proc/cpuinfo" "cat /proc/meminfo" "lscpu")
-          
-          # Choose one command randomly
           RANDOM_INDEX=$((RANDOM % ${#NON_CRITICAL_COMMANDS[@]}))
           SELECTED_COMMAND=${NON_CRITICAL_COMMANDS[$RANDOM_INDEX]}
           echo "Selected command: $SELECTED_COMMAND"
           
-          # SSH into segfault server using sshpass and execute commands in a tmux session
-          sshpass -p "segfault" ssh -o StrictHostKeyChecking=no -o "SetEnv SECRET=${SEGFAULT_SECRET}" root@${SEGFAULT_SERVER} <<EOF
-SESSION_NAME="segauto"
-# Check if tmux session exists; create it if not
-if tmux has-session -t "\$SESSION_NAME" 2>/dev/null; then
-  echo "Tmux session '\$SESSION_NAME' exists, attaching..."
-else
-  echo "Tmux session '\$SESSION_NAME' does not exist, creating..."
-  tmux new-session -d -s "\$SESSION_NAME"
-fi
-
-# Send the selected command to the tmux session
-tmux send-keys -t "\$SESSION_NAME" "${SELECTED_COMMAND}" Enter
-sleep 2
-
-# Capture the command output from the tmux pane
-OUTPUT=\$(tmux capture-pane -t "\$SESSION_NAME" -p -S -100)
-tmux detach -s "\$SESSION_NAME"
-
-# Generate timestamp in UTC+05:30 (Asia/Kolkata) in 12hr format with AM/PM, Date and Day
-TIMESTAMP=\$(TZ=Asia/Kolkata date "+%I:%M:%S %p, %d-%m-%Y (%A)")
-
-# Prepare the email content
-EMAIL_TEXT="Timestamp: \${TIMESTAMP}\nCommand: ${SELECTED_COMMAND}\nOutput:\n\${OUTPUT}"
-
-# Send email via Mailgun API with timestamp in the subject
-curl -s --user "api:${MAILGUN_API_KEY}" "https://api.mailgun.net/v3/${MAILGUN_DOMAIN}/messages" \\
-  -F from="Mailgun Sandbox <postmaster@${MAILGUN_DOMAIN}>" \\
-  -F to="Mari Skripper <skripper9090@tuta.io>" \\
-  -F subject="\${TIMESTAMP} Command Execution Confirmation" \\
-  -F text="\${EMAIL_TEXT}"
-EOF
+          sshpass -p "segfault" ssh -o StrictHostKeyChecking=no -o "SetEnv SECRET=${SEGFAULT_SECRET}" root@${SEGFAULT_SERVER} <<-EOF
+            SESSION_NAME="segauto"
+            # Check if tmux session exists; create it if not
+            if tmux has-session -t "\$SESSION_NAME" 2>/dev/null; then
+              echo "Tmux session '\$SESSION_NAME' exists, attaching..."
+            else
+              echo "Tmux session '\$SESSION_NAME' does not exist, creating..."
+              tmux new-session -d -s "\$SESSION_NAME"
+            fi
+            # Send the selected command to the tmux session
+            tmux send-keys -t "\$SESSION_NAME" "${SELECTED_COMMAND}" Enter
+            sleep 2
+            # Capture the command output from the tmux pane
+            OUTPUT=\$(tmux capture-pane -t "\$SESSION_NAME" -p -S -100)
+            tmux detach -s "\$SESSION_NAME"
+            # Generate timestamp in UTC+05:30 (Asia/Kolkata) in 12hr format with AM/PM, Date and Day
+            TIMESTAMP=\$(TZ=Asia/Kolkata date "+%I:%M:%S %p, %d-%m-%Y (%A)")
+            # Prepare the email content
+            EMAIL_TEXT="Timestamp: \${TIMESTAMP}\nCommand: ${SELECTED_COMMAND}\nOutput:\n\${OUTPUT}"
+            # Send email via Mailgun API with timestamp in the subject
+            curl -s --user "api:${MAILGUN_API_KEY}" "https://api.mailgun.net/v3/${MAILGUN_DOMAIN}/messages" \\
+              -F from="Mailgun Sandbox <postmaster@${MAILGUN_DOMAIN}>" \\
+              -F to="Mari Skripper <skripper9090@tuta.io>" \\
+              -F subject="\${TIMESTAMP} Command Execution Confirmation" \\
+              -F text="\${EMAIL_TEXT}" 
+           EOF 
