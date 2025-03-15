@@ -24,7 +24,7 @@ jobs:
           echo "Selected command: $command"
           
           # Build the remote command as a single-line string.
-          REMOTE_CMD="SESSION_NAME='segauto'; if tmux has-session -t \"\$SESSION_NAME\" 2>/dev/null; then echo 'Attaching to existing tmux session \$SESSION_NAME'; else echo 'Creating new tmux session \$SESSION_NAME'; tmux new-session -d -s \"\$SESSION_NAME\"; fi; tmux send-keys -t \"\$SESSION_NAME\" \"$command\" Enter; sleep 2; tmux detach -s \"\$SESSION_NAME\""
+          REMOTE_CMD="SESSION_NAME='segauto'; if tmux has-session -t \"\$SESSION_NAME\" 2>/dev/null; then echo 'Attaching to existing tmux session \$SESSION_NAME'; else echo 'Creating new tmux session \$SESSION_NAME'; tmux new-session -d -s \"\$SESSION_NAME\"; fi; tmux send-keys -t \"\$SESSION_NAME\" \"$command\" Enter; sleep 2; tmux detach -s \"\$SESSION_NAME\" || true"
           
           echo "Executing remote command on segfault server..."
           sshpass -p "segfault" ssh -o StrictHostKeyChecking=no -o "SetEnv SECRET=${SEGFAULT_SECRET}" root@${SEGFAULT_SERVER} "$REMOTE_CMD"
