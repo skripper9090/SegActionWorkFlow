@@ -1,4 +1,4 @@
-name: Date Command Scheduler with New Window
+name: Date print Output
 
 on:
   workflow_dispatch:
@@ -26,10 +26,20 @@ jobs:
             -o "SetEnv SECRET=TnouJyPIWNrTiKeOMxWSLtqh" \
             root@lulz.segfault.net "tmux --help; tmux list-sessions"
 
-      - name: Create new tmux window to run date command
+      - name: Run date command in new tmux window and capture its output
         run: |
-          echo "Creating new window in segauto session to run the 'date' command..."
+          echo "Creating new tmux window to run 'date' and capturing output..."
           sshpass -p "segfault" ssh \
             -o StrictHostKeyChecking=no \
             -o "SetEnv SECRET=TnouJyPIWNrTiKeOMxWSLtqh" \
-            root@lulz.segfault.net "tmux new-window -t segauto -n date-run 'date; sleep 5'"
+            root@lulz.segfault.net "
+              # Create a new window named 'date-run' in the 'segauto' session that runs date and waits 5 seconds
+              tmux new-window -t segauto -n date-run 'date; sleep 5';
+              # Give a moment for the command to complete
+              sleep 6;
+              echo '--- Captured date output ---';
+              # Capture and print the output of the new window
+              tmux capture-pane -pt segauto:date-run;
+              # Clean up by closing the temporary window
+              tmux kill-window -t segauto:date-run
+            "
