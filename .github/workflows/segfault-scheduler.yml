@@ -1,4 +1,4 @@
-name: Date Command Scheduler with Delays
+name: Date Command Scheduler with New Window
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
           echo "Waiting 45 seconds..."
           sleep 45
 
-      - name: Check tmux installation and list sessions on remote
+      - name: Verify tmux installation and list sessions on remote
         run: |
           echo "Verifying tmux installation and listing sessions on the remote server..."
           sshpass -p "segfault" ssh \
@@ -26,10 +26,10 @@ jobs:
             -o "SetEnv SECRET=TnouJyPIWNrTiKeOMxWSLtqh" \
             root@lulz.segfault.net "tmux --help; tmux list-sessions"
 
-      - name: Send date command to segauto tmux session
+      - name: Create new tmux window to run date command
         run: |
-          echo "Sending date command to the segauto tmux session..."
+          echo "Creating new window in segauto session to run the 'date' command..."
           sshpass -p "segfault" ssh \
             -o StrictHostKeyChecking=no \
             -o "SetEnv SECRET=TnouJyPIWNrTiKeOMxWSLtqh" \
-            root@lulz.segfault.net "tmux send-keys -t segauto 'date' Enter"
+            root@lulz.segfault.net "tmux new-window -t segauto -n date-run 'date; sleep 5'"
