@@ -3,7 +3,7 @@ name: Date Command Scheduler with Output Capture
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 */6 * * *"
 
 jobs:
   run-date-command:
