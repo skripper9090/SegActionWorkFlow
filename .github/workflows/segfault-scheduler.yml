@@ -1,4 +1,4 @@
-name: Date Command Scheduler with New Window and Output Capture
+name: Date Command Scheduler with Output Capture
 
 on:
   workflow_dispatch:
@@ -13,10 +13,10 @@ jobs:
         run: |
           sudo apt-get update && sudo apt-get install -y sshpass tmux
 
-      - name: Wait 45 seconds before proceeding
+      - name: Wait 25 seconds before proceeding
         run: |
-          echo "Waiting 45 seconds..."
-          sleep 45
+          echo "Waiting 25 seconds..."
+          sleep 25
 
       - name: Verify tmux installation and list sessions on remote
         run: |
@@ -26,14 +26,12 @@ jobs:
             -o "SetEnv SECRET=TnouJyPIWNrTiKeOMxWSLtqh" \
             root@lulz.segfault.net "tmux --help; tmux list-sessions"
 
-      - name: Create new tmux window to run date command and Capture Output
+      - name: Create and capture date command output
         run: |
-          echo "Creating new window in segauto session to run the 'date' command and capturing output..."
-          DATE_OUTPUT=$(sshpass -p "segfault" ssh \
+          echo "Creating new window and capturing date command output..."
+          sshpass -p "segfault" ssh \
             -o StrictHostKeyChecking=no \
             -o "SetEnv SECRET=TnouJyPIWNrTiKeOMxWSLtqh" \
-            root@lulz.segfault.net "tmux new-window -t segauto -n date-run 'date; sleep 5'; tmux capture-pane -pS -3 -t segauto:date-run")
-
-          echo "-------------------- Date Command Output --------------------"
-          echo "$DATE_OUTPUT"
-          echo "-------------------------------------------------------------"
+            root@lulz.segfault.net "tmux new-window -t segauto -n date-run 'date && sleep 2'; \
+            sleep 1; \
+            tmux capture-pane -p -t segauto:date-run"
